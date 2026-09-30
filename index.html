@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Picker</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.25rem 1rem;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 440px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        header {
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.025em;
+        }
+
+        header p {
+            color: #94a3b8;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .filter-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            padding-bottom: 0.25rem;
+            scrollbar-width: none;
+        }
+
+        .filter-wrapper::-webkit-scrollbar {
+            display: none;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 0.5rem;
+            width: max-content;
+        }
+
+        .filter-btn {
+            background-color: #1e293b;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            padding: 0.5rem 0.875rem;
+            border-radius: 9999px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn:hover {
+            border-color: #10b981;
+            color: #e2e8f0;
+        }
+
+        .filter-btn.active {
+            background-color: #10b981;
+            color: #0f172a;
+            border-color: #10b981;
+            font-weight: 700;
+        }
+
+        .card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 1.25rem;
+            padding: 1.75rem 1.5rem;
+            text-align: center;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 270px;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.15s ease;
+        }
+
+        .badge-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.875rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.3rem 0.75rem;
+            background-color: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            font-weight: 700;
+            font-size: 0.75rem;
+            border-radius: 9999px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge.day-badge {
+            background-color: rgba(6, 182, 212, 0.15);
+            color: #22d3ee;
+        }
+
+        .exercise-title {
+            font-size: 1.65rem;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 1rem;
+            line-height: 1.25;
+            min-height: 2.2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            width: 100%;
+        }
+
+        .detail-item {
+            background-color: #0f172a;
+            padding: 0.75rem 0.5rem;
+            border-radius: 0.75rem;
+            border: 1px solid #334155;
+        }
+
+        .detail-label {
+            font-size: 0.6875rem;
+            color: #64748b;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        .detail-value {
+            font-size: 0.875rem;
+            color: #e2e8f0;
+            font-weight: 600;
+            margin-top: 0.25rem;
+        }
+
+        .action-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            border: none;
+            padding: 1rem;
+            border-radius: 1rem;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+            transition: transform 0.1s ease, filter 0.2s ease;
+        }
+
+        .action-btn:hover {
+            filter: brightness(1.08);
+        }
+
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+
+        .shuffling {
+            animation: pulse 0.12s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { opacity: 0.5; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1.01); }
+        }
+
+        .routine-list {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-top: 0.25rem;
+        }
+
+        .routine-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #94a3b8;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .exercise-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.375rem;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .tag {
+            background-color: #0f172a;
+            color: #cbd5e1;
+            font-size: 0.75rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 0.5rem;
+            border: 1px solid #334155;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header>
+            <h1>Workout Picker</h1>
+            <p>Your Custom Weekly Routine Picker</p>
+        </header>
+
+        <nav class="filter-wrapper">
+            <div class="filter-bar" id="filter-bar">
+                <button class="filter-btn active" data-category="all">All Days</button>
+                <button class="filter-btn" data-category="Monday">Mon: Chest</button>
+                <button class="filter-btn" data-category="Tuesday">Tue: Back</button>
+                <button class="filter-btn" data-category="Wednesday">Wed: Legs</button>
+                <button class="filter-btn" data-category="Thursday">Thu: Arms</button>
+                <button class="filter-btn" data-category="Friday">Fri: Full Body</button>
+            </div>
+        </nav>
+
+        <main class="card" id="exercise-card">
+            <div class="badge-container">
+                <span class="badge day-badge" id="exercise-day">Today's Pick</span>
+                <span class="badge" id="exercise-category">Category</span>
+            </div>
+            <h2 class="exercise-title" id="exercise-name">Tap Pick to Start</h2>
+            
+            <div class="details-grid">
+                <div class="detail-item">
+                    <div class="detail-label">Target Area</div>
+                    <div class="detail-value" id="exercise-target">--</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Volume</div>
+                    <div class="detail-value" id="exercise-reps">3 sets x 10 reps</div>
+                </div>
+            </div>
+        </main>
+
+        <button id="pick-btn" class="action-btn">Pick Exercise</button>
+
+        <div class="routine-list">
+            <div class="routine-title">
+                <span id="list-title">All Planned Movements</span>
+                <span id="list-count" style="color: #10b981;">28 Total</span>
+            </div>
+            <div class="exercise-tags" id="exercise-tags">
+                <!-- Dynamic Tag List -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // LAYER: DATA
+        function getExerciseData() {
+            return [
+                // Monday - Chest
+                { name: "Barbell Bench Press", day: "Monday", category: "Chest", target: "Mid Chest", reps: "3 sets x 10 reps" },
+                { name: "Dumbbell Bench Press", day: "Monday", category: "Chest", target: "Mid Chest", reps: "3 sets x 10 reps" },
+                { name: "Machine Inner Chest Press", day: "Monday", category: "Chest", target: "Inner Chest", reps: "3 sets x 10 reps" },
+                { name: "Cable Crossover", day: "Monday", category: "Chest", target: "Lower/Outer Chest", reps: "3 sets x 10 reps" },
+                { name: "Pec Deck Machine", day: "Monday", category: "Chest", target: "Chest Fly", reps: "3 sets x 10 reps" },
+                { name: "Incline Press", day: "Monday", category: "Chest", target: "Upper Chest", reps: "3 sets x 10 reps" },
+
+                // Tuesday - Back
+                { name: "T-Bar Rows", day: "Tuesday", category: "Back", target: "Upper & Mid Back", reps: "3 sets x 10 reps" },
+                { name: "Seated Cable Rows", day: "Tuesday", category: "Back", target: "Mid Back & Lats", reps: "3 sets x 10 reps" },
+                { name: "Cable Lat Pull Down", day: "Tuesday", category: "Back", target: "Lats", reps: "3 sets x 10 reps" },
+                { name: "Single-Arm Dumbbell Rows", day: "Tuesday", category: "Back", target: "Lats & Rhomboids", reps: "3 sets x 10 reps" },
+                { name: "High Row Machine", day: "Tuesday", category: "Back", target: "Upper Back", reps: "3 sets x 10 reps" },
+                { name: "Lever Seated Reverse Fly", day: "Tuesday", category: "Back", target: "Rear Delts", reps: "3 sets x 10 reps" },
+
+                // Wednesday - Legs
+                { name: "Barbell Squats", day: "Wednesday", category: "Legs", target: "Quads & Glutes", reps: "3 sets x 10 reps" },
+                { name: "Deadlift", day: "Wednesday", category: "Legs", target: "Posterior Chain", reps: "3 sets x 10 reps" },
+                { name: "Dumbbell Lunge", day: "Wednesday", category: "Legs", target: "Quads & Glutes", reps: "3 sets x 10 reps" },
+                { name: "Leg Press", day: "Wednesday", category: "Legs", target: "Quads & Glutes", reps: "3 sets x 10 reps" },
+                { name: "Hack Squat", day: "Wednesday", category: "Legs", target: "Quads Focus", reps: "3 sets x 10 reps" },
+                { name: "Leg Extension", day: "Wednesday", category: "Legs", target: "Isolated Quads", reps: "3 sets x 10 reps" },
+                { name: "Abductor Machine", day: "Wednesday", category: "Legs", target: "Hip Abductors", reps: "3 sets x 10 reps" },
+                { name: "Hamstring Curls", day: "Wednesday", category: "Legs", target: "Hamstrings", reps: "3 sets x 10 reps" },
+
+                // Thursday - Arms
+                { name: "Standing Barbell Curl", day: "Thursday", category: "Arms", target: "Biceps", reps: "3 sets x 10 reps" },
+                { name: "Hammer Curls", day: "Thursday", category: "Arms", target: "Brachialis & Forearms", reps: "3 sets x 10 reps" },
+                { name: "Preacher Curl", day: "Thursday", category: "Arms", target: "Biceps Short Head", reps: "3 sets x 10 reps" },
+                { name: "Concentration Curl", day: "Thursday", category: "Arms", target: "Biceps Peak", reps: "3 sets x 10 reps" },
+                { name: "Cable Tricep Pushdowns", day: "Thursday", category: "Arms", target: "Triceps", reps: "3 sets x 10 reps" },
+                { name: "Overhead Tricep Extension", day: "Thursday", category: "Arms", target: "Triceps Long Head", reps: "3 sets x 10 reps" },
+
+                // Friday - Full Body
+                { name: "Squat", day: "Friday", category: "Full Body", target: "Lower Body", reps: "3 sets x 10 reps" },
+                { name: "Bench Press", day: "Friday", category: "Full Body", target: "Chest & Arms", reps: "3 sets x 10 reps" },
+                { name: "Cable Rows", day: "Friday", category: "Full Body", target: "Back & Biceps", reps: "3 sets x 10 reps" },
+                { name: "Machine Inner Chest Press", day: "Friday", category: "Full Body", target: "Chest", reps: "3 sets x 10 reps" },
+                { name: "Leg Press", day: "Friday", category: "Full Body", target: "Legs", reps: "3 sets x 10 reps" }
+            ];
+        }
+
+        // LAYER: LOGIC
+        function getRandomExercise(selectedCategory) {
+            const exercises = getExerciseData();
+            const filtered = selectedCategory === "all" 
+                ? exercises 
+                : exercises.filter(item => item.day === selectedCategory);
+            
+            if (filtered.length === 0) return null;
+
+            const randomIndex = Math.floor(Math.random() * filtered.length);
+            return filtered[randomIndex];
+        }
+
+        function getFilteredExercises(selectedCategory) {
+            const exercises = getExerciseData();
+            return selectedCategory === "all"
+                ? exercises
+                : exercises.filter(item => item.day === selectedCategory);
+        }
+
+        // LAYER: DISPLAY
+        function renderExercise(exercise) {
+            if (!exercise) return;
+            const nameEl = document.getElementById("exercise-name");
+            const dayEl = document.getElementById("exercise-day");
+            const categoryEl = document.getElementById("exercise-category");
+            const targetEl = document.getElementById("exercise-target");
+            const repsEl = document.getElementById("exercise-reps");
+
+            dayEl.textContent = exercise.day;
+            categoryEl.textContent = exercise.category;
+            nameEl.textContent = exercise.name;
+            targetEl.textContent = exercise.target;
+            repsEl.textContent = exercise.reps;
+        }
+
+        function renderTagList(selectedCategory) {
+            const tagsContainer = document.getElementById("exercise-tags");
+            const listTitle = document.getElementById("list-title");
+            const listCount = document.getElementById("list-count");
+
+            const list = getFilteredExercises(selectedCategory);
+            tagsContainer.innerHTML = "";
+
+            listTitle.textContent = selectedCategory === "all" ? "All Planned Movements" : `${selectedCategory} Routine`;
+            listCount.textContent = `${list.length} Exercises`;
+
+            list.forEach(ex => {
+                const tag = document.createElement("span");
+                tag.className = "tag";
+                tag.textContent = ex.name;
+                tagsContainer.appendChild(tag);
+            });
+        }
+
+        // Application Controller setup
+        document.addEventListener("DOMContentLoaded", () => {
+            let activeCategory = "all";
+            const pickBtn = document.getElementById("pick-btn");
+            const filterBtns = document.querySelectorAll(".filter-btn");
+            const cardEl = document.getElementById("exercise-card");
+
+            renderTagList(activeCategory);
+
+            filterBtns.forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    filterBtns.forEach(b => b.classList.remove("active"));
+                    e.target.classList.add("active");
+                    activeCategory = e.target.getAttribute("data-category");
+                    renderTagList(activeCategory);
+                });
+            });
+
+            pickBtn.addEventListener("click", () => {
+                cardEl.classList.add("shuffling");
+                
+                setTimeout(() => {
+                    const exercise = getRandomExercise(activeCategory);
+                    renderExercise(exercise);
+                    cardEl.classList.remove("shuffling");
+                }, 180);
+            });
+        });
+    </script>
+</body>
+</html>
